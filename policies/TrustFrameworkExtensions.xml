@@ -80,6 +80,8 @@
             <InputParameter Id="action" DataType="string" Value="signIn" />
             <InputParameter Id="forceEnrollment" DataType="boolean" Value="true" />
             <InputParameter Id="redirectToSettings" DataType="boolean" Value="false" />
+            <!-- When true, syncs the user's email authenticator to the email address verified by Azure AD B2C -->
+            <InputParameter Id="emailVerified" DataType="boolean" Value="true" />
         </InputParameters>
         <OutputClaims>
             <OutputClaim ClaimTypeReferenceId="requestBody" TransformationClaimType="outputClaim" />
