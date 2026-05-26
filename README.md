@@ -6,11 +6,11 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Links
 
-| Resource | URL |
-|----------|-----|
-| Live Demo | [as-azure-ad-b2c-example.vercel.app](https://as-azure-ad-b2c-example.vercel.app) |
-| Custom Policies | [./policies/](./policies/) |
-| Integration Guide | [docs.authsignal.com](https://docs.authsignal.com/integrations/azure-ad-b2c) |
+| Resource          | URL                                                                              |
+| ----------------- | -------------------------------------------------------------------------------- |
+| Live Demo         | [as-azure-ad-b2c-example.vercel.app](https://as-azure-ad-b2c-example.vercel.app) |
+| Custom Policies   | [./policies/](./policies/)                                                       |
+| Integration Guide | [docs.authsignal.com](https://docs.authsignal.com/integrations/azure-ad-b2c)     |
 
 ## Quick Start Guide
 
@@ -29,12 +29,14 @@ Use the custom policies in this repo as a starting point for your own implementa
    Install the [Azure AD B2C extension](https://marketplace.visualstudio.com/items?itemName=AzureADB2CTools.aadb2c) from the VS Code marketplace.
 
 2. **Clone the repo**
+
    ```bash
    git clone <repo-url>
    cd azure-ad-b2c-example
    ```
 
 3. **Copy the example config**
+
    ```bash
    cp appsettings.example.json appsettings.json
    ```
@@ -56,3 +58,27 @@ Use the custom policies in this repo as a starting point for your own implementa
 7. **Upload the custom policies**
 
    Upload the generated custom policies to your Azure AD B2C tenant via the Azure Portal or using the VS Code extension.
+
+## E2E testing passkeys
+
+This repo includes a Playwright E2E test for the Azure AD B2C passkey journey. It follows the Authsignal passkey E2E testing guide by installing a Chromium virtual authenticator, enrolling a passkey through the real B2C/Authsignal journey, then signing back in with the same virtual credential.
+
+The test provisions a disposable B2C local account with Microsoft Graph, so run it only against a dedicated test tenant. In addition to the app's usual env variables in `.env.local.example`, configure these test variables:
+
+| Variable                           | Purpose                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| `E2E_BASE_URL`                     | Base URL for this Next.js app, for example `http://127.0.0.1:3000`.             |
+| `AZURE_AD_B2C_TENANT_NAME`         | B2C tenant name without `.onmicrosoft.com`.                                     |
+| `AUTH_TENANT_GUID`                 | Optional tenant GUID for Microsoft Graph auth; falls back to the tenant domain. |
+| `AZURE_AD_B2C_GRAPH_CLIENT_ID`     | App registration client ID with Microsoft Graph user create/delete permission.  |
+| `AZURE_AD_B2C_GRAPH_CLIENT_SECRET` | Client secret for the Graph app registration.                                   |
+| `E2E_TEST_EMAIL_DOMAIN`            | Email domain used for generated test users; defaults to `example.com`.          |
+| `AUTHSIGNAL_API_URL`               | Authsignal Server API URL, including `/v1` when required by the tenant region.  |
+| `AUTHSIGNAL_SECRET_KEY`            | Authsignal Server API secret for server-side verification.                      |
+
+Run the test with:
+
+```bash
+yarn playwright install chromium
+yarn test:e2e
+```
