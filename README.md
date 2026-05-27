@@ -72,9 +72,6 @@ The test provisions a disposable B2C local account with Microsoft Graph, so run 
 | `AUTH_TENANT_GUID`                 | Optional tenant GUID for Microsoft Graph auth; falls back to the tenant domain. |
 | `AZURE_AD_B2C_GRAPH_CLIENT_ID`     | App registration client ID with Microsoft Graph user create/delete permission.  |
 | `AZURE_AD_B2C_GRAPH_CLIENT_SECRET` | Client secret for the Graph app registration.                                   |
-| `E2E_TEST_EMAIL_DOMAIN`            | Email domain used for generated test users; defaults to `example.com`.          |
-| `AUTHSIGNAL_API_URL`               | Authsignal Server API URL, including `/v1` when required by the tenant region.  |
-| `AUTHSIGNAL_SECRET_KEY`            | Authsignal Server API secret for server-side verification.                      |
 
 Run the test with:
 

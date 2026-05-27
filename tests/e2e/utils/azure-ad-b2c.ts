@@ -75,7 +75,7 @@ async function graphFetch(path: string, init?: RequestInit) {
 
 export async function provisionTestUser(): Promise<ProvisionedB2CUser> {
   const id = randomUUID();
-  const emailDomain = process.env.E2E_TEST_EMAIL_DOMAIN || "example.com";
+  const emailDomain = "example.com";
   const email = `passkey-e2e-${id}@${emailDomain}`;
   const displayName = `Passkey E2E ${id.slice(0, 8)}`;
   const mailNickname = `passkey-e2e-${id.replace(/-/g, "").slice(0, 16)}`;
@@ -114,14 +114,4 @@ export async function provisionTestUser(): Promise<ProvisionedB2CUser> {
     displayName,
     password,
   };
-}
-
-export async function deleteTestUser(userId: string) {
-  const response = await graphFetch(`/users/${encodeURIComponent(userId)}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok && response.status !== 404) {
-    throw new Error(`Failed to delete B2C test user: ${response.status} ${await response.text()}`);
-  }
 }
