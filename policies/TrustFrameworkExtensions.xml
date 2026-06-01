@@ -56,6 +56,11 @@
         <DataType>boolean</DataType>
       </ClaimType>
 
+      <ClaimType Id="correlationId">
+        <DisplayName>correlationId</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+
       <ClaimType Id="errorMessage">
         <DisplayName></DisplayName>
         <DataType>string</DataType>
@@ -74,6 +79,8 @@
         <InputClaims>
             <InputClaim ClaimTypeReferenceId="objectId" TransformationClaimType="userId" />
             <InputClaim ClaimTypeReferenceId="signInNames.emailAddress" TransformationClaimType="email" />
+            <!-- Forwards the Azure AD B2C request correlation ID to Authsignal as custom data on the action -->
+            <InputClaim ClaimTypeReferenceId="correlationId" TransformationClaimType="custom.correlationId" />
         </InputClaims>
         <InputParameters>
             <!-- NOTE: Change the action value here to the corresponding Authsignal action your user is performing. This may be signIn, signUp, manageSettings etc. -->
@@ -169,11 +176,13 @@
           <!-- NOTE: Change the host name below -->
           <Metadata>
               <Item Key="ServiceUrl">{Settings:AuthsignalHostname}/init-auth</Item>
+              <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
           </Metadata>
           <InputClaimsTransformations>
               <InputClaimsTransformation ReferenceId="AuthsignalCreateInitAuthRequestBody"/>
           </InputClaimsTransformations>
           <InputClaims>
+              <InputClaim ClaimTypeReferenceId="correlationId" DefaultValue="{Context:CorrelationId}" AlwaysUseDefaultValue="true" />
               <InputClaim ClaimTypeReferenceId="requestBody"/>
           </InputClaims>
           <OutputClaims>
