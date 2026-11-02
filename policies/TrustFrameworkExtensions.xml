@@ -83,8 +83,8 @@
             <InputClaim ClaimTypeReferenceId="correlationId" TransformationClaimType="custom.correlationId" />
         </InputClaims>
         <InputParameters>
-            <!-- NOTE: Change the action value here to the corresponding Authsignal action your user is performing. This may be signIn, signUp, manageSettings etc. -->
-            <InputParameter Id="action" DataType="string" Value="signIn" />
+            <!-- NOTE: Set SignInActionCode in appsettings.json to the Authsignal action your user is performing, for example signIn -->
+            <InputParameter Id="action" DataType="string" Value="{Settings:SignInActionCode}" />
             <InputParameter Id="forceEnrollment" DataType="boolean" Value="true" />
             <InputParameter Id="redirectToSettings" DataType="boolean" Value="false" />
             <!-- When true, syncs the user's email authenticator to the email address verified by Azure AD B2C -->
