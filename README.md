@@ -59,6 +59,17 @@ Use the custom policies in this repo as a starting point for your own implementa
 
    Upload the generated custom policies to your Azure AD B2C tenant via the Azure Portal or using the VS Code extension.
 
+## Manage security policy
+
+The `B2C_1A_MANAGE_SECURITY` policy in [./policies/ManageSecurity.xml](./policies/ManageSecurity.xml) runs an Authsignal flow for a user who is already signed in. The flow verifies the user, then shows a page where the user manages authenticators. The demo app shows a **Manage security** button after sign-in.
+
+1. In the Authsignal Portal, create a flow with a verification step and a step that manages authenticators. In the verification step, allow every method your users can enroll, for example passkey, email OTP and SMS.
+2. Set `ManageSecurityActionCode` in `appsettings.json` to the action code of that flow.
+3. Build and upload the policies.
+4. In the Azure AD B2C app registration, add the redirect URI `<NEXTAUTH_URL>/api/auth/callback/azure-ad-b2c-manage-security`.
+
+The policy returns `action_state` and `correlation_id` in the ID token. The policy shows an error page if the flow fails or if the Authsignal user ID does not match the B2C user.
+
 ## E2E testing passkeys
 
 This repo includes a Playwright E2E test for the Azure AD B2C passkey journey. It follows the Authsignal passkey E2E testing guide by installing a Chromium virtual authenticator, enrolling a passkey through the real B2C/Authsignal journey, then signing back in with the same virtual credential.

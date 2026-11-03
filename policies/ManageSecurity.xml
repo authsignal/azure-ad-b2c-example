@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TrustFrameworkPolicy
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06"
+  PolicySchemaVersion="0.3.0.0"
+  TenantId="{Settings:Tenant}"
+  PolicyId="B2C_1A_MANAGE_SECURITY"
+  PublicPolicyUri="http://{Settings:Tenant}/B2C_1A_MANAGE_SECURITY">
+
+  <BasePolicy>
+    <TenantId>{Settings:Tenant}</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
+  </BasePolicy>
+
+  <BuildingBlocks>
+    <ClaimsSchema>
+      <ClaimType Id="authsignalRequestBody">
+        <DisplayName>Authsignal request body</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalInitToken">
+        <DisplayName>Authsignal init token</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalCorrelationId">
+        <DisplayName>Correlation ID</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalActionState">
+        <DisplayName>Authsignal action state</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalSubject">
+        <DisplayName>Authsignal user ID</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalSubjectMatches">
+        <DisplayName>Authsignal user ID matches</DisplayName>
+        <DataType>boolean</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalFlowSucceeded">
+        <DisplayName>Authsignal flow succeeded</DisplayName>
+        <DataType>boolean</DataType>
+      </ClaimType>
+      <ClaimType Id="authsignalErrorMessage">
+        <DisplayName></DisplayName>
+        <DataType>string</DataType>
+        <UserInputType>Paragraph</UserInputType>
+      </ClaimType>
+    </ClaimsSchema>
+
+    <ClaimsTransformations>
+      <ClaimsTransformation Id="AuthsignalCreateManageSecurityRequestBody" TransformationMethod="GenerateJson">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="objectId" TransformationClaimType="userId" />
+          <InputClaim ClaimTypeReferenceId="signInNames.emailAddress" TransformationClaimType="email" />
+          <InputClaim ClaimTypeReferenceId="authsignalCorrelationId" TransformationClaimType="custom.correlationId" />
+        </InputClaims>
+        <InputParameters>
+          <InputParameter Id="action" DataType="string" Value="{Settings:ManageSecurityActionCode}" />
+          <InputParameter Id="emailVerified" DataType="boolean" Value="true" />
+        </InputParameters>
+        <OutputClaims>
+          <OutputClaim ClaimTypeReferenceId="authsignalRequestBody" TransformationClaimType="outputClaim" />
+        </OutputClaims>
+      </ClaimsTransformation>
+
+      <ClaimsTransformation Id="AuthsignalCheckManageSecuritySubject" TransformationMethod="CompareClaims">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="objectId" TransformationClaimType="inputClaim1" />
+          <InputClaim ClaimTypeReferenceId="authsignalSubject" TransformationClaimType="inputClaim2" />
+        </InputClaims>
+        <InputParameters>
+          <InputParameter Id="operator" DataType="string" Value="EQUAL" />
+          <InputParameter Id="ignoreCase" DataType="string" Value="true" />
+        </InputParameters>
+        <OutputClaims>
+          <OutputClaim ClaimTypeReferenceId="authsignalSubjectMatches" TransformationClaimType="outputClaim" />
+        </OutputClaims>
+      </ClaimsTransformation>
+
+      <ClaimsTransformation Id="AuthsignalCheckManageSecurityFlowSucceeded" TransformationMethod="CompareClaimToValue">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="authsignalActionState" TransformationClaimType="inputClaim1" />
+        </InputClaims>
+        <InputParameters>
+          <InputParameter Id="compareTo" DataType="string" Value="CHALLENGE_SUCCEEDED" />
+          <InputParameter Id="operator" DataType="string" Value="equal" />
+          <InputParameter Id="ignoreCase" DataType="string" Value="false" />
+        </InputParameters>
+        <OutputClaims>
+          <OutputClaim ClaimTypeReferenceId="authsignalFlowSucceeded" TransformationClaimType="outputClaim" />
+        </OutputClaims>
+      </ClaimsTransformation>
+    </ClaimsTransformations>
+  </BuildingBlocks>
+
+  <ClaimsProviders>
+    <ClaimsProvider>
+      <DisplayName>Authsignal Manage Security</DisplayName>
+      <TechnicalProfiles>
+        <TechnicalProfile Id="Authsignal-ManageSecurity-SetCorrelationId">
+          <DisplayName>Set correlation ID</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.ClaimsTransformationProtocolProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
+          </Metadata>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="authsignalCorrelationId" DefaultValue="{Context:CorrelationId}" AlwaysUseDefaultValue="true" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>
+
+        <TechnicalProfile Id="Authsignal-ManageSecurity-InitAuth">
+          <DisplayName>Authsignal init auth</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="ServiceUrl">{Settings:AuthsignalHostname}/init-auth</Item>
+            <Item Key="SendClaimsIn">Body</Item>
+            <Item Key="ClaimUsedForRequestPayload">authsignalRequestBody</Item>
+            <Item Key="AuthenticationType">Basic</Item>
+            <Item Key="AllowInsecureAuthInProduction">false</Item>
+            <Item Key="ResolveJsonPathsInJsonTokens">true</Item>
+            <Item Key="DefaultUserMessageIfRequestFailed">Cannot process your request right now, please try again later.</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <Key Id="BasicAuthenticationUsername" StorageReferenceId="B2C_1A_AuthsignalSecret" />
+            <Key Id="BasicAuthenticationPassword" StorageReferenceId="B2C_1A_AuthsignalSecret" />
+          </CryptographicKeys>
+          <InputClaimsTransformations>
+            <InputClaimsTransformation ReferenceId="AuthsignalCreateManageSecurityRequestBody" />
+          </InputClaimsTransformations>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="authsignalRequestBody" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="authsignalInitToken" PartnerClaimType="token" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>
+
+        <TechnicalProfile Id="Authsignal-ManageSecurity-Oidc">
+          <DisplayName>Authsignal</DisplayName>
+          <Protocol Name="OpenIdConnect" />
+          <Metadata>
+            <Item Key="METADATA">{Settings:AuthsignalHostname}/oidc/.well-known/openid-configuration</Item>
+            <Item Key="client_id">{Settings:AuthsignalTenantId}</Item>
+            <Item Key="authorization_endpoint">{Settings:AuthsignalHostname}/oidc/auth</Item>
+            <Item Key="AccessTokenEndpoint">{Settings:AuthsignalHostname}/oidc/token</Item>
+            <Item Key="response_types">code</Item>
+            <Item Key="scope">openid</Item>
+            <Item Key="HttpBinding">POST</Item>
+            <Item Key="response_mode">form_post</Item>
+            <Item Key="token_endpoint_auth_method">client_secret_post</Item>
+            <Item Key="UsePolicyInRedirectUri">false</Item>
+            <Item Key="IncludeClaimResolvingInClaimsHandling">true</Item>
+            <Item Key="ResolveJsonPathsInJsonTokens">true</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <Key Id="client_secret" StorageReferenceId="B2C_1A_AuthsignalSecret" />
+          </CryptographicKeys>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="authsignalInitToken" PartnerClaimType="token" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="authsignalSubject" PartnerClaimType="sub" />
+            <OutputClaim ClaimTypeReferenceId="authsignalActionState" PartnerClaimType="action_state" />
+          </OutputClaims>
+          <OutputClaimsTransformations>
+            <OutputClaimsTransformation ReferenceId="AuthsignalCheckManageSecuritySubject" />
+            <OutputClaimsTransformation ReferenceId="AuthsignalCheckManageSecurityFlowSucceeded" />
+          </OutputClaimsTransformations>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>
+
+        <TechnicalProfile Id="Authsignal-ManageSecurity-Error">
+          <DisplayName>Manage security failed</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.SelfAssertedAttributeProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <Item Key="ContentDefinitionReferenceId">api.selfasserted</Item>
+            <Item Key="setting.showContinueButton">false</Item>
+            <Item Key="setting.showCancelButton">false</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="authsignalErrorMessage" DefaultValue="We couldn't confirm it's you. Please try again." />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="authsignalErrorMessage" Required="true" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>
+      </TechnicalProfiles>
+    </ClaimsProvider>
+  </ClaimsProviders>
+
+  <UserJourneys>
+    <UserJourney Id="AuthsignalManageSecurity">
+      <OrchestrationSteps>
+        <OrchestrationStep Order="1" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthsignalSetCorrelationId" TechnicalProfileReferenceId="Authsignal-ManageSecurity-SetCorrelationId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthsignalInitAuth" TechnicalProfileReferenceId="Authsignal-ManageSecurity-InitAuth" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="5" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthsignalOidc" TechnicalProfileReferenceId="Authsignal-ManageSecurity-Oidc" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="6" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>authsignalSubjectMatches</Value>
+              <Value>true</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthsignalSubjectMismatchError" TechnicalProfileReferenceId="Authsignal-ManageSecurity-Error" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="7" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="true">
+              <Value>authsignalFlowSucceeded</Value>
+              <Value>true</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AuthsignalFlowFailedError" TechnicalProfileReferenceId="Authsignal-ManageSecurity-Error" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="8" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+      </OrchestrationSteps>
+      <ClientDefinition ReferenceId="DefaultWeb" />
+    </UserJourney>
+  </UserJourneys>
+
+  <RelyingParty>
+    <DefaultUserJourney ReferenceId="AuthsignalManageSecurity" />
+    <TechnicalProfile Id="PolicyProfile">
+      <DisplayName>PolicyProfile</DisplayName>
+      <Protocol Name="OpenIdConnect" />
+      <OutputClaims>
+        <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
+        <OutputClaim ClaimTypeReferenceId="authsignalActionState" PartnerClaimType="action_state" />
+        <OutputClaim ClaimTypeReferenceId="authsignalCorrelationId" PartnerClaimType="correlation_id" />
+        <OutputClaim ClaimTypeReferenceId="tenantId" AlwaysUseDefaultValue="true" DefaultValue="{Policy:TenantObjectId}" />
+      </OutputClaims>
+      <SubjectNamingInfo ClaimType="sub" />
+    </TechnicalProfile>
+  </RelyingParty>
+</TrustFrameworkPolicy>

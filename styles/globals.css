@@ -76,3 +76,25 @@ a {
   color: #24b47e;
   cursor: pointer;
 }
+
+.result {
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 12px 15px;
+  margin: 10px 0;
+}
+
+.result dt {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.result dd {
+  margin: 2px 0 8px;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.result dd:last-child {
+  margin-bottom: 0;
+}
